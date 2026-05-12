@@ -2,10 +2,6 @@
  * Integration tests for user_api endpoints.
  * Requires a running MySQL instance at 127.0.0.1:3306 (user: test, pass: test, db: chem).
  *
- * Known bugs tested/documented:
- *   - POST /createUser for a truly new user: after confirming user doesn't exist, the code
- *     calls Model.oneByWebSSOID again expecting Chemdw data — it gets undefined and throws.
- *     Only the "restore deleted user" path works.
  */
 
 const request = require('supertest');
@@ -212,9 +208,16 @@ describe('POST /createUser', () => {
         expect(res.body[0]).toMatchObject({ is_deleted: 0, role: 'USER' });
     });
 
-    // BUG: for a genuinely new webssoId the code does a second DB lookup expecting
-    // Chemdw data, gets undefined, and throws TypeError. Documents the broken path.
-    it('returns 400 for a new webssoId (chemdw integration path is broken)', async () => {
+    it('creates a new user with provided name and email', async () => {
+        const res = await request(app)
+            .post('/createUser')
+            .send({ webssoId: WSSO_NEW, role: 'USER', name: 'New User', email: 'new@test.com' });
+        expect(res.status).toBe(200);
+        expect(res.body[0]).toMatchObject({ user_id: WSSO_NEW, role: 'USER' });
+        await knex('users').where('user_id', WSSO_NEW).delete();
+    });
+
+    it('returns 400 when name or email is missing', async () => {
         const res = await request(app)
             .post('/createUser')
             .send({ webssoId: WSSO_NEW, role: 'USER' });

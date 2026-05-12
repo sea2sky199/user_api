@@ -176,26 +176,20 @@ class UsersController {
         }
       }
 
-      let chemdwResponse = await Model.oneByWebSSOID(webssoId);
-      if (!chemdwResponse.user) {
-        const errorMessage = `No chemdw data returned for BEMS ID:${webssoId}`;
-        console.log(errorMessage);
-        throw new Error(errorMessage);
-      }
-      const userInfo = chemdwResponse.user;
+      const name = req.body.name;
+      const email = req.body.email;
+      assert(webssoId, "webssoId is required");
+      assert(name, "name is required");
+      assert(email, "email is required");
       const currentTimestamp = Math.floor(Date.now() / 1000);
       const newUser = {
-        name: `${userInfo.firstName} ${userInfo.lastName}`,
-        user_id: parseInt(userInfo.webssoId),
-        email: userInfo.emailAddress,
-        role: role,
-        privileged_permission: privileged_permission,
-        WebSSO_meta: JSON.stringify(chemdwResponse),
+        name,
+        user_id: parseInt(webssoId),
+        email,
+        role,
+        privileged_permission,
         datetime_added: currentTimestamp,
       };
-      assert(newUser.name, "Chemdw did not provide a valid name");
-      assert(newUser.user_id, "Chemdw did not provide a valid chemdw");
-      assert(newUser.email, "Chemdw did not provide a valid email");
       let user = await Model.add(newUser);
       res.send(user);
     } catch (err) {
