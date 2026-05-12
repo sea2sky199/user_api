@@ -1,0 +1,14 @@
+---
+applications:
+  - name: chem-app-node
+    buildpacks:
+      - nodejs_buildpack
+    command: npm start
+    memory: 100M
+    services:
+      - chem-app-db
+    instances: 1
+    env:
+      DEBUG: CHEM:*
+      CHEM_AUTH_TOKEN: ((CHEM_AUTH_TOKEN))
+      NODE_ENV: ((NODE_ENV))
