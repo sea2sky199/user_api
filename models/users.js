@@ -65,13 +65,7 @@ class User {
   }
 
   static async allActive() {
-    try {
-    //let users = await knex("users").where("is_deleted", false??null).clone();
-    let users = await knex('users').select().clone();
-    } catch (err) {
-    console.error(err);
-    }
-    return users;
+    return knex('users').where('is_deleted', false).select();
   }
 
   static async count() {

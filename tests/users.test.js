@@ -3,8 +3,6 @@
  * Requires a running MySQL instance at 127.0.0.1:3306 (user: test, pass: test, db: chem).
  *
  * Known bugs tested/documented:
- *   - GET /users (allActive): `let users` is block-scoped inside try{}, so `return users`
- *     outside the block throws ReferenceError. Test documents this broken state.
  *   - POST /createUser for a truly new user: after confirming user doesn't exist, the code
  *     calls Model.oneByWebSSOID again expecting Chemdw data — it gets undefined and throws.
  *     Only the "restore deleted user" path works.
@@ -53,11 +51,13 @@ afterAll(async () => {
 // GET /users
 // ---------------------------------------------------------------------------
 describe('GET /users', () => {
-    // BUG: allActive() declares `let users` inside try{} then returns it outside the
-    // block — this is a ReferenceError in JS. The endpoint currently returns 400.
-    it('returns 400 due to allActive scoping bug (known)', async () => {
+    it('returns all active users as an array', async () => {
         const res = await request(app).get('/users');
-        expect(res.status).toBe(400);
+        expect(res.status).toBe(200);
+        expect(Array.isArray(res.body)).toBe(true);
+        const ids = res.body.map(u => u.user_id);
+        expect(ids).toContain(WSSO_ALICE);
+        expect(ids).toContain(WSSO_BOB);
     });
 });
 
